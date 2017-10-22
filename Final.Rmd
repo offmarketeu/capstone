@@ -1,0 +1,139 @@
+---
+title: "Text prediction algorithm"
+author: "Pedro Luis Recio"
+date: "13 de octubre de 2017"
+output: html_document
+---
+
+```{r echo=FALSE, include=FALSE}
+library(tm)
+library(knitr)
+library(ggplot2)
+library(NLP)
+library(quanteda)
+
+opts_knit$set(root.dir = "E:/COURSERA/Data Science/Course10-Capstone/CORP")
+tsum <- data.frame()
+
+```
+
+## Intro
+ 
+This is the first task in the Capstone 10 - Data Science project. There are three txt files which have english text from three different sources: Blog, News and Twitter.
+Our first task is cleaning and preparing the information for further analysis.
+The size of the whole files are huge, so we are going to extract some samples for our analysis. We are generating some binary ramdom  numbers to extract the 10% of the information.
+
+```{r echo=TRUE, warning=FALSE}
+
+# Blogs
+blogs <- readLines("E:/COURSERA/Data Science/Course10-Capstone/CORP/en_US.blogs.txt")
+
+# News
+news <- readLines("E:/COURSERA/Data Science/Course10-Capstone/CORP/en_US.news.txt")
+
+# Twitter
+twitter <- readLines("E:/COURSERA/Data Science/Course10-Capstone/CORP/en_US.twitter.txt")
+```
+
+```{r}
+# Initial exploratory table
+for (j in list.files())
+  {
+  con <- file(j, "r") 
+  i=0
+  maxline=0
+  nword =0
+  line<-readLines(con,1)
+  nword = nword + length(unlist(strsplit(line," ")))
+  while (length(line)!=0){
+    if (nchar(line)>maxline){
+      maxline=nchar(line)
+    }
+    i=i+1
+    line<-readLines(con,1)
+    nword = nword + length(unlist(strsplit(line," ")))
+  }
+  fsum<- as.data.frame(t(c(j, i, maxline,nword)))
+  tsum <- rbind(tsum,fsum)
+  close(con)
+}
+colnames(tsum)<- c('File','Num_lines', 'Max_char', 'Num_word')
+knitr:: kable(tsum)
+write.csv(tsum, 'E:/COURSERA/Data Science/Course10-Capstone/tsum.csv')
+```
+
+
+
+
+```{r}
+# Samples
+
+# Blogs
+set.seed(123)
+blogs <- blogs[rbinom(length(blogs)*.10, length(blogs), .5)]
+write.csv(blogs, file = "E:/COURSERA/Data Science/Course10-Capstone/sample/blog.sample.csv", row.names = FALSE, col.names = FALSE)
+
+# News
+set.seed(123)
+news <- news[rbinom(length(news)*.10, length(news), .5)]
+write.csv(news, file = "E:/COURSERA/Data Science/Course10-Capstone/Sample/news.sample.csv", row.names = FALSE, col.names = FALSE)
+
+# Twitter
+set.seed(123)
+twitter <- twitter[rbinom(length(twitter)*.10, length(twitter), .5)]
+write.csv(twitter, file = "E:/COURSERA/Data Science/Course10-Capstone/Sample/twitter.sample.csv", row.names = FALSE, col.names = FALSE)
+
+# clean up global environment
+rm(blogs, news, twitter)
+
+# Corpus
+fullCorpus <- Corpus(DirSource("E:/COURSERA/Data Science/Course10-Capstone/"), readerControl = list(language="en_US"))
+fullcorpues<-corpues(fullCorpus)
+
+```
+
+
+## Exploratory analysis
+
+```{r echo=TRUE, warning=FALSE}
+
+```
+
+
+
+## Tokenization
+
+Preparing the information for the analysys is an essential task. For that purpose we need removing numbers, stopwords, and numbers. We would like to remove profanity world for our text too.
+
+Tasks to accomplish
+
+- Tokenization - identifying appropriate tokens such as words, punctuation, and numbers. Writing a function that takes a file as input and returns a tokenized version of it.
+- Profanity filtering - removing profanity and other words you do not want to predict.
+
+
+```{r}
+# Profanity
+profanity <- read.csv("E:/COURSERA/Data Science/Course10-Capstone/profanity_list.csv", header=FALSE, stringsAsFactors=FALSE)
+profanity <- profanity$V1
+
+# Tokenizations
+tob<-dfm(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE)
+gm1_top<- topfeatures(dfm(tob))
+tob2 <-dfm(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE, ignoredFeatures=c(stopwords("english"),profanity))
+gm1bis_top<- topfeatures(dfm(tob2))
+gm2<- tokens_ngrams(tob, n = 2L, skip = 0L, concatenator = " ")
+gm2_top<- topfeatures(dfm(gm2))
+gm3<- tokens_ngrams(tob, n = 3L, skip = 0L, concatenator = " ")
+gm3_top<- topfeatures(dfm(gm3))
+gm4<- tokens_ngrams(tob, n = 4L, skip = 0L, concatenator = " ")
+gm4_top<- topfeatures(dfm(gm4))
+
+```
+
+```{r}
+gf1 <- data.frame(word=names(gm1_top), count=gm1_top)
+ggplot(gf1,aes(x=reorder(word, -count),, y=count))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (unigrams)') + ggtitle('Most Common Unigrams Including Stop Words') 
+gf1bis <- data.frame(word=names(gm1bis_top), count=gm1bis_top)
+ggplot(gf1bis,aes(x=reorder(word, -count),, y=count))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (unigrams)') + ggtitle('Most Common Unigrams Including Stop Words') 
+```
+
