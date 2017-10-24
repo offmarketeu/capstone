@@ -11,8 +11,12 @@ library(knitr)
 library(ggplot2)
 library(NLP)
 library(quanteda)
-
-opts_knit$set(root.dir = "C:/Users/n040485/Documents/000_CAPSTONE/CORP")
+dir<-"E:/COURSERA/Data Science/Course10-Capstone/"
+dir1<-"E:/COURSERA/Data Science/Course10-Capstone/CORP"
+#dir1<-"C:/Users/n040485/Documents/000_CAPSTONE/CORP"
+dir2<-"E:/COURSERA/Data Science/Course10-Capstone/SAMPLE"
+#dir2<-"C:/Users/n040485/Documents/000_CAPSTONE/CORP"
+opts_knit$set(root.dir = dir1)
 tsum <- data.frame()
 
 ```
@@ -22,7 +26,7 @@ tsum <- data.frame()
 The first step in analyzing any new data set is figuring out.
 This exercise uses the files named LOCALE.blogs.txt where LOCALE is the each of the four locales en_US, de_DE, ru_RU and fi_FI. The data is from a corpus called HC Corpora. See the About the Corpora reading for more details. The files have been language filtered but may still contain some foreign text.
 
-The Original link of [data](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip).
+The Original link of [data base](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip).
 
 We will use the English database but may consider three other databases in German, Russian and Finnish.
 
@@ -32,7 +36,7 @@ We will use the English database but may consider three other databases in Germa
 ```{r, echo=FALSE,include=FALSE, warning=FALSE}
 
 # Corpus
-fullCorpus <- Corpus(DirSource("C:/Users/n040485/Documents/000_CAPSTONE/SAMPLE"), readerControl = list(language="en_US"))
+fullCorpus <- Corpus(DirSource(dir2), readerControl = list(language="en_US"))
 fullcorpues<-corpus(fullCorpus)
 
 ```
@@ -50,47 +54,52 @@ Tasks to accomplish
 
 ```{r, echo=FALSE, warning=FALSE}
 # Profanity
-profanity <- read.csv("C:/Users/n040485/Documents/000_CAPSTONE/profanity_list.csv", header=FALSE, stringsAsFactors=FALSE)
+profanity <- read.csv(paste(dir,"profanity_list.csv", sep=""), header=FALSE, stringsAsFactors=FALSE)
 profanity <- profanity$V1
 
 # Tokenizations
 #Unigrams
-tob<-dfm(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE)
+tob<-dfm(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE, remove=profanity, toLower=TRUE)
 gm1_top<- topfeatures(dfm(tob))
-tob2 <-dfm(fullcorpues, remove_numbers = TRUE,  remove_punct=TRUE, remove=stopwords("english"))
+tob2 <-dfm(fullcorpues, remove_numbers = TRUE,  remove_punct=TRUE, toLower = TRUE, remove=c(profanity, stopwords("english")))
 gm1bis_top<- topfeatures(dfm(tob2))
 #Bigrams
 gm2<-tokens(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE)
+gm2<-toLower(gm2)
+gm2<-removeFeatures(gm2,profanity)
 gm2<- tokens_ngrams(gm2, n = 2L, skip = 0L, concatenator = " ")
 gm2_top<- topfeatures(dfm(gm2))
 #Trigrams
 gm3<-tokens(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE)
+gm3<-toLower(gm3)
+gm3<-removeFeatures(gm3,profanity)
 gm3<- tokens_ngrams(gm3, n = 3L, skip = 0L, concatenator = " ")
 gm3_top<- topfeatures(dfm(gm3))
 #Quatrigrams
 gm4<-tokens(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE)
 gm4<- tokens_ngrams(gm4, n = 4L, skip = 0L, concatenator = " ")
 gm4_top<- topfeatures(dfm(gm4))
-
-
+gm4<-toLower(gm4)
+gm4<-removeFeatures(gm4,profanity)
 ```
 
 ```{r, results='asis', echo=FALSE, warning=FALSE}
 #Unigrams graphics
+#a
 gf1 <- data.frame(word=names(gm1_top), count=gm1_top)
 ggplot(gf1,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (unigrams)') + ggtitle('Most Common Unigrams Including Stop Words')
+#b
 gf1bis <- data.frame(word=names(gm1bis_top), count=gm1bis_top)
 ggplot(gf1bis,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (unigrams)') + ggtitle('Most Common Unigrams non Including Stop Words') 
 #Bigrams graphics
 gf2bis <- data.frame(word=names(gm2_top), count=gm2_top)
-ggplot(gf2bis,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (bigrams)') + ggtitle('Most Common Bigrams non Including Stop Words') 
+ggplot(gf2bis,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (bigrams)') + ggtitle('Most Common Bigrams Including Stop Words') 
 #Trigrams graphics
 gf3bis <- data.frame(word=names(gm3_top), count=gm3_top)
-ggplot(gf3bis,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (Trigrams)') + ggtitle('Most Common Trigrams non Including Stop Words')
+ggplot(gf3bis,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (Trigrams)') + ggtitle('Most Common Trigrams Including Stop Words')
 #Quatrigrams graphics
-gf4bis <- data.frame(word=names(gm4_top), count=gm4_top)
-ggplot(gf4bis,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (Trigrams)') + ggtitle('Most Common Quatrigrams non Including Stop Words')
-
+gf4 <- data.frame(word=names(gm4_top), count=gm4_top)
+ggplot(gf4,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (Trigrams)') + ggtitle('Most Common Quatrigrams Including Stop Words')
 
 ```
 
