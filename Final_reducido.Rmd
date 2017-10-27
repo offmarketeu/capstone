@@ -57,52 +57,61 @@ Tasks to accomplish
 
 ```{r, echo=FALSE, warning=FALSE}
 # Profanity
+
+#Profanity file
 profanity <- read.csv(paste(dir,"profanity_list.csv", sep=""), header=FALSE, stringsAsFactors=FALSE)
 profanity <- profanity$V1
-
-# Tokenizations
-#Unigrams
-tob<-dfm(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE, remove=profanity, toLower=TRUE)
-gm1_top<- topfeatures(dfm(tob))
-tob2 <-dfm(fullcorpues, remove_numbers = TRUE,  remove_punct=TRUE, toLower = TRUE, remove=c(profanity, stopwords("english")))
-gm1bis_top<- topfeatures(dfm(tob2))
-#Bigrams
-gm2<-tokens(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE)
-gm2<-toLower(gm2)
-gm2<-removeFeatures(gm2,profanity)
-gm2<- tokens_ngrams(gm2, n = 2L, skip = 0L, concatenator = " ")
-gm2_top<- topfeatures(dfm(gm2))
-#Trigrams
-gm3<-tokens(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE)
-gm3<-toLower(gm3)
-gm3<-removeFeatures(gm3,profanity)
-gm3<- tokens_ngrams(gm3, n = 3L, skip = 0L, concatenator = " ")
-gm3_top<- topfeatures(dfm(gm3))
-#Quatrigrams
-gm4<-tokens(fullcorpues, remove_numbers = TRUE,  remove_punct = TRUE)
-gm4<- tokens_ngrams(gm4, n = 4L, skip = 0L, concatenator = " ")
-gm4_top<- topfeatures(dfm(gm4))
-gm4<-toLower(gm4)
-gm4<-removeFeatures(gm4,profanity)
 ```
 
-```{r, results='asis', echo=FALSE, warning=FALSE}
+
+```{r}
+# Tokenizations 1-gram
+
+#1-grams with stopwords
+tkdfm <- dfm(fullcorpues, tolower=TRUE, remove_numbers = TRUE, remove_punct=TRUE,stem = TRUE, ngrams = 1, verbose = FALSE)
+top_ng1<- topfeatures(tkdfm)
+ #freq_1<-docfreq(top_ng1)
+freq_1 <- data.frame(word=names(top_ng1), count=top_ng1)
+
 #Unigrams graphics
 #a
-gf1 <- data.frame(word=names(gm1_top), count=gm1_top)
-ggplot(gf1,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (unigrams)') + ggtitle('Most Common Unigrams Including Stop Words')
+plot1<-ggplot(freq_1,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (unigrams)') + ggtitle('Top 10 Unigrams Including Stop Words')
+
+
+#1-grams without stopwords
+tkdfm_nst <- dfm(fullcorpues, tolower=TRUE, remove=stopwords("english"), remove_numbers = TRUE, remove_punct=TRUE,stem = TRUE, ngrams = 1, verbose = FALSE)
+top_ng_nst<- topfeatures(tkdfm_nst)
+freq_1nst <- data.frame(word=names(top_ng_nst), count=top_ng_nst)
+
 #b
-gf1bis <- data.frame(word=names(gm1bis_top), count=gm1bis_top)
-ggplot(gf1bis,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (unigrams)') + ggtitle('Most Common Unigrams non Including Stop Words') 
+ggplot(freq_1nst,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (unigrams)') + ggtitle('Top 10 Unigrams non Including Stop Words') 
+
+```
+
+
+```{r}
+#2-grams
+tkdfm2 <- dfm(fullcorpues, tolower=TRUE, remove_numbers = TRUE, remove_punct=TRUE,stem = TRUE, ngrams = 2, verbose = FALSE)
+top_ng2<- topfeatures(tkdfm2)
+freq_2 <- data.frame(word=names(top_ng2), count=top_ng2)
+
 #Bigrams graphics
-gf2bis <- data.frame(word=names(gm2_top), count=gm2_top)
-ggplot(gf2bis,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (bigrams)') + ggtitle('Most Common Bigrams Including Stop Words') 
+ggplot(freq_2,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (2-grams)') + ggtitle('Top 10 2-grams Including Stop Words') 
+
+```
+
+```{r}
+#3-grams
+
+tkdfm3 <- dfm(fullcorpues, tolower=TRUE, remove_numbers = TRUE, remove_punct=TRUE,stem = TRUE, ngrams = 3, verbose = FALSE)
+top_ng3<- topfeatures(tkdfm3)
+
+freq_3 <- data.frame(word=names(top_ng3), count=top_ng3)
+
 #Trigrams graphics
-gf3bis <- data.frame(word=names(gm3_top), count=gm3_top)
-ggplot(gf3bis,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (Trigrams)') + ggtitle('Most Common Trigrams Including Stop Words')
-#Quatrigrams graphics
-gf4 <- data.frame(word=names(gm4_top), count=gm4_top)
-ggplot(gf4,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (Trigrams)') + ggtitle('Most Common Quatrigrams Including Stop Words')
+ggplot(freq_3,aes(x=reorder(word, -count), y=count,fill=as.factor(word)))+ geom_bar(stat="identity")+ xlab('Count') + ylab('Words (3-grams)') + ggtitle('Top 10 3-grams Including Stop Words') 
+
+
 
 ```
 
