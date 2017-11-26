@@ -10,20 +10,18 @@ ui <- fluidPage(
    
    sidebarLayout(
      sidebarPanel(
-        textInput("word","Input text here"),
-        conditionalPanel("$('#fileUploaded').hasClass('Loading data')", 
-                         tags$div('Loaded ')
+        textInput("word","Input text here")
         )
-     )
    ,
    mainPanel(
           h3("Sugestion"),
           uiOutput("wd1"),
           uiOutput("wd2"),
           uiOutput("wd3")
-      )
-   )
-)
+            )
+    )
+  )
+
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
@@ -97,12 +95,19 @@ server <- function(input, output, session) {
         actionButton("wdd3", label = ss[1,3])
       })
       
-      observeEvent(input$wd1, {
-        updateTextInput(session, "word", value = paste("input$word", "label", sep=" "))
-        
+      observeEvent(input$wdd1, {
+        ss<- sugest()
+        updateTextInput(session, "word", value = paste(input$word,ss[1,1]))
       })
-  
-   
+      
+      observeEvent(input$wdd2, {
+        ss<- sugest()
+        updateTextInput(session, "word", value = paste(input$word,ss[1,2]))
+      })
+      observeEvent(input$wdd3, {
+        ss<- sugest()
+        updateTextInput(session, "word", value = paste(input$word,ss[1,3]))
+      })
 }
 
 # Run the application 
